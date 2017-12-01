@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=EUC-KR">
+<title>Insert title here</title>
+</head>
+<script	type = "text/javascript" src = "/SY_OCS/ajax/httpRequest.js">
+
+</script>
+<script type="text/javascript">
+	var checkFirst = false;
+	var lastKeyword = '';
+	var loopSendKeyword = false;
+	function startSuggest(){
+		if(checkFirst == false){
+			setTimeout("sendKeyword();",500);
+			loopSendKeyword = true;
+		}
+		checkFirst = true;
+	}
+	function sendKeyword(){
+		if(loopSendKeyword == false)
+			return;
+		var keyword = document.search.keyword.value;
+		if(keyword == ''){
+			lastKeyword = '';
+			hide('suggest');
+		}
+		else if(keyword != lastKeyword){
+			lastKeyword = keyword;
+			if(keyword != ''){
+				var params = "keyword=" + encodeURIComponent(keyword);
+				sendRequest("/SY_OCS/common/suggestFileDisease.jsp", params, displayResult, 'POST');
+			}
+			else{
+				hide('suggest');
+			}
+		}
+		setTimeout("sendKeyword();",500);
+	}
+	
+	function displayResult(){
+		if(httpRequest.readyState == 4) {
+	         if(httpRequest.status == 200) {
+	            var resText = httpRequest.responseText;
+	            var res =  resText.split('|');
+	            var count = parseInt(res[0]);
+	            var keywordList = null;
+	            if( count > 0 ) {
+	               keywordList = res[1].split('=');
+	               var html = "<table><tr><th>상병ID</th><th>상병코드</th></tr>";
+	               for ( var i = 0 ; i < keywordList.length ; i++) {
+	                  
+	            	   var keywordList2 = keywordList[i].split(',');
+	                  html+= "<tr><td><a href=\"javascript:select('" +
+	                  keywordList2[0] +"-" + keywordList2[1] + "')\">" +
+	                  keywordList2[0] + "</a></td><td>" + keywordList2[1] +"</td></tr>";
+	                   // alert(html); 
+	               }
+	               html+= "</table></form>";
+	               var listView = document.getElementById('suggestList');
+	                  listView.innerHTML = html;
+	                  show('suggest');
+	                  reload();
+	            }
+	         } else {
+	            alert("에러발생: " + httpRequest.status);
+	         }
+	      }
+	}
+	function select(selectedKeyword){
+		document.search.keyword.value = selectedKeyword;
+		loopSendKeyword = false;
+		checkFirst = false;
+		hide('suggest');
+	}
+	function show(elementId){
+		var element = document.getElementById(elementId);
+		if(element){
+			element.style.display = '';
+		}
+	}
+	function hide(elementId){
+		var element = document.getElementById(elementId);
+		if(element){
+			element.style.display = 'none';
+		}
+	}
+	
+	 function aaaaa(){
+			alert(document.getElementById('keyword').value);
+			/* 
+			var preView = window.opener.document.getElementById('preList');
+			preView.innerHTML += "<li class=\"w3-display-container\"><input type=\"hidden\" name='aaa' value='질병:"+document.getElementById('keyword').value+"'>"+"질병: "+document.getElementById('keyword').value +"<span onclick=\"this.parentElement.style.display='none'\" class=\"w3-button w3-transparent w3-display-right\">&times;</span></li>"
+			
+			 */
+			var table = window.opener.document.getElementById('diseaseTable');
+			var rowlen = table.rows.length;
+			var row = table.insertRow(rowlen);	// HTML에서의 권장 표준 문법
+			
+			var aa = document.getElementById('keyword').value.split('-');
+			
+			row.insertCell(0).innerHTML = "<input class='w3-input' type='checkbox' value = 'm' name = '"+aa[0]+"' >";
+			row.insertCell(1).innerHTML = "<input class='w3-input' type='checkbox' value = 'r' name = '"+aa[0]+"'>";
+			row.insertCell(2).innerHTML = "<input class='w3-input' type='text' name = 'd_code' value = '"+aa[0]+"'>";
+			row.insertCell(3).innerHTML = "<input class='w3-input' type='text' name = 'd_name' value = '"+aa[1]+"'>";
+			row.insertCell(4).innerHTML = "<button onclick=\"remove_this()\" class=\"w3-button w3-black w3-round-xlarge\" type=\"button\">삭제</button>";
+			
+			self.close(); 
+		} 
+		 
+
+	</script>
+	<style>
+		#view{
+			border: 1px solid #999;
+		}
+	</style>
+	</head>
+	<body>
+	<form	name = "search" >
+		<input type="text" name = "keyword" id = "keyword" onkeydown = "startSuggest()"/>
+		<input type="button" value="처방" onclick = "aaaaa()"/>
+		<div id="suggest" style = "display:; position: absolute; left:0px; top:50px;">
+			<div id = "suggestList" style="height: 800px; width:500px; overflow: scroll; padding: 10px;">
+				
+			</div>
+		</div>
+	</form>
+	</body>
+	</html>

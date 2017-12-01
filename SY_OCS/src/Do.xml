@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC 	"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="do.mybatis">
+	<cache />
+	<select id="getReceives" resultType="Receive"  parameterType="hashmap">
+		select receive_id, 
+			(select patient_name from patient where patient_id = r.patient_id) patient_id,
+			user_id,
+			receive_date,
+			fmyn,
+			treat_status,
+			receipt_yn 
+		from receive r
+		where user_id = #{user_id} and treat_status = 'N'
+	</select>
+	
+	<select id="getPatient" resultType="Patient"  parameterType="hashmap">
+		select * from patient 
+		where patient_id = (select patient_id from receive where receive_id = #{receive_id})
+	</select>
+	
+	<select id="getReceive" resultType="Receive"  parameterType="hashmap">
+		select * from receive where patient_id = #{patient_id} and treat_status = 'N' and user_id = #{user_id}
+	</select>
+	
+	
+	<select id="dpre_readcount" resultType="int">
+		select count(*) from disease_prescripteion
+	</select>
+	
+	<select id="pre_readcount" resultType="int">
+		select count(*) from prescription
+	</select>
+	
+	<insert id="insert_dprescription" parameterType="hashmap">
+		insert into disease_prescripteion 
+		values(#{pcnt},#{dpdb.receive_id},#{dpdb.disease_id}, #{dpdb.maindisesyn}, #{dpdb.ro_yn})
+	</insert>
+	
+	<insert id="insert_prescription" parameterType="hashmap">
+		insert into prescription 
+		values(#{pcnt},#{pdb.receive_id},
+		#{pdb.prescription_type},#{pdb.days},#{pdb.one_dosage},#{pdb.day_dosage},
+		#{pdb.injec_id},#{pdb.drug_id},#{pdb.suga_id},#{pdb.receipt_yn},sysdate)
+	</insert>
+	
+	<update id="update_receive" parameterType="hashmap">
+		update receive set TREAT_STATUS='Y' where receive_id = #{receive_id}
+	</update>
+	
+	<select id="selectRecive" resultType="Receive"  parameterType="hashmap">
+		select * from receive where user_id = #{user_id}
+	</select>
+	
+	<select id="selectPrescription" resultType="prescription"  parameterType="hashmap">
+		select * from prescription where receive_id = #{receive_id}
+	</select>
+	
+	<select id="selectDPrescription" resultType="Disease_prescripteion"  parameterType="hashmap">
+		select * from Disease_prescripteion where receive_id = #{receive_id}
+	</select>
+	
+	<select id="getPatientName" resultType="string"  parameterType="hashmap">
+		select patient_name from patient where patient_id = #{patient_id}
+	</select>
+	
+	<select id="getMedicineName" resultType="string"  parameterType="hashmap">
+		select drug_name from drug where drug_id = #{drug_id}
+	</select>
+	
+	<select id="getInjecName" resultType="string"  parameterType="hashmap">
+		select INJEC_NAME_KOR from injection where injec_id = #{injec_id}
+	</select>
+	
+	<select id="getDiseaseName" resultType="string"  parameterType="hashmap">
+		select DISEASE_NAME_KOR from disease where disease_code = #{disease_id}
+	</select>
+	
+	<select id="getdiPrescription" resultType="Disease_prescripteion"  parameterType="hashmap">
+		select DISEASE_PRES_ID, (select disease_name_kor from DISEASE where disease_code = dp.DISEASE_ID) receive_id, 
+		DISEASE_ID, MAINDISESYN, RO_YN from disease_prescripteion dp
+		where receive_id in (select receive_id from receive where patient_id = #{patient_id})
+	</select>
+	
+	<select id="getdrPrecription" resultType="Prescription"  parameterType="hashmap">
+		select PRESCRIPTION_ID, (select drug_name from drug where drug_id = pr.drug_id) RECEIVE_ID, 
+		PRESCRIPTION_TYPE, days, ONE_DOSAGE, DAY_DOSAGE, INJEC_ID, drug_id ,SUGA_ID,RECEIPT_YN, 
+		PRESCRIPTION_DATE from prescription pr
+		where receive_id in (select receive_id from receive where patient_id = #{patient_id}) 
+		and prescription_type = 'drug'
+	</select>
+	
+	<select id="getinPrecription" resultType="search_test"  parameterType="hashmap">
+		select st.SEARCH_TEST_ID, PATIENT_ID, 
+		st.RECEIVE_ID, st.PRESCRIPTION_ID, INJEC_ID, 
+		st.IMAGE, (select injec_name_kor from injection where injec_id = st.injec_id) USER_ID, 
+		st.OPINION, st.UPLOAD_DATE from search_test st
+		 where patient_id = #{patient_id}
+	</select>
+	
+	<select id="selectInjectionPrescription" resultType="Patient" >
+		select p.patient_id, p.patient_name, p.jumin1, p.jumin, p.patient_sex,  pp.PRESCRIPTION_ID patient_age,
+		r.receive_ID patient_address, p.patient_phone,p. patient_btype, p.patient_unusual 
+		from patient p , receive r , prescription pp
+		where pp.receive_ID = r.receive_ID and r.patient_id = p.patient_id and pp.prescription_type = 'injection' and pp.receipt_YN = 'Y'
+	</select>
+	
+	<select id="selectChoiceInjec" resultType="Injection"  parameterType="hashmap">
+		select i.injec_id, group_num, i.injec_name_kor, i.injec_name_ent 
+		from injection i, prescription p 
+		where p.prescription_id = #{prescription_id} and i.INJEC_ID = p.INJEC_ID
+		</select>
+	
+	<select id="search_test_readcount" resultType="int">
+		select count(*) from search_test
+	</select>
+	
+	<insert id="insert_search_test" parameterType="hashmap">
+		insert into search_test 
+		values(#{pcnt},#{search_test.patient_id},#{search_test.receive_id},
+		#{search_test.prescription_id},#{search_test.injec_id},#{search_test.image}
+		,#{search_test.user_id},#{search_test.opinion},sysdate)
+	</insert>
+	
+	<update id="update_precription" parameterType="hashmap">
+		update prescription set receipt_yn='E' where receive_id = #{search_test.receive_id} and prescription_type ='injection'
+	</update>
+	
+	
+	<select id="getSearch_testList" resultType="Search_test"  parameterType="hashmap">
+		select st.SEARCH_TEST_ID, 
+		(select patient_name from patient where patient_id = st.patient_id) PATIENT_ID, 
+		st.RECEIVE_ID, st.PRESCRIPTION_ID, 
+		(select injec_name_kor from injection where injec_id = st.injec_id)INJEC_ID, 
+		st.IMAGE, st.USER_ID, st.OPINION, st.UPLOAD_DATE from search_test st
+		where RECEIVE_ID in (select RECEIVE_ID from receive where USER_ID = #{user_id}) 
+		and opinion = 'N'
+	</select>
+	
+	<update id="update_search_test" parameterType="hashmap">
+		update search_test set OPINION = #{search_test_opinion} where SEARCH_TEST_ID = #{search_test_id}
+	</update>
+	
+	<select id="getdiPrescription_patient_name" resultType="Disease_prescripteion"  parameterType="hashmap">
+		select DISEASE_PRES_ID, (select disease_name_kor from DISEASE where disease_code = dp.DISEASE_ID) receive_id, 
+		DISEASE_ID, MAINDISESYN, RO_YN from disease_prescripteion dp
+		where receive_id in (select receive_id from receive where patient_id in (select patient_id from patient where patient_name LIKE '%${patient_name}%'))
+	</select>
+	
+	<select id="getdrPrecription_patient_name" resultType="Prescription"  parameterType="hashmap">
+		select PRESCRIPTION_ID, (select drug_name from drug where drug_id = pr.drug_id) RECEIVE_ID, 
+		PRESCRIPTION_TYPE, days, ONE_DOSAGE, DAY_DOSAGE, INJEC_ID, drug_id ,SUGA_ID,RECEIPT_YN, 
+		PRESCRIPTION_DATE from prescription pr
+		where receive_id in (select receive_id from receive where patient_id in (select patient_id from patient where patient_name LIKE '%${patient_name}%')) 
+		and prescription_type = 'drug'
+	</select>
+	
+	<select id="getinPrecription_patient_name" resultType="search_test"  parameterType="hashmap">
+		select st.SEARCH_TEST_ID, PATIENT_ID, 
+		st.RECEIVE_ID, st.PRESCRIPTION_ID, INJEC_ID, 
+		st.IMAGE, (select injec_name_kor from injection where injec_id = st.injec_id) USER_ID, 
+		st.OPINION, st.UPLOAD_DATE from search_test st
+		 where patient_id in (select patient_id from patient where patient_name LIKE '%${patient_name}%')
+	</select>
+	
+</mapper>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+PUBLIC 	"-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias type="model.BoardDataBean" alias="Board"/>
+		<typeAlias type="model.StaffDataBean" alias="Staff"/>
+		<typeAlias type="model.DepartmentDataBean" alias="Department"/>
+		<typeAlias type="model.Disease_prescripteionDataBean" alias="Disease_prescripteion"/>
+		<typeAlias type="model.DiseaseDataBean" alias="Disease"/>
+		<typeAlias type="model.DrugDataBean" alias="Drug"/>
+		<typeAlias type="model.PatientDataBean" alias="Patient"/>
+		<typeAlias type="model.PrescriptionDataBean" alias="Prescription"/>
+		<typeAlias type="model.ReceiptDataBean" alias="Receipt"/>
+		<typeAlias type="model.ReceiveDataBean" alias="Receive"/>
+		<typeAlias type="model.Search_testDataBean" alias="Search_test"/>
+		<typeAlias type="model.Set_receiptDataBean" alias="Set_receipt"/>
+		<typeAlias type="model.SugaDataBean" alias="Suga"/>
+		<typeAlias type="model.InjectionDataBean" alias="Injection"/>
+	</typeAliases>
+
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC"/>
+			<dataSource type="POOLED">
+				<property name="driver" value="oracle.jdbc.driver.OracleDriver"/>
+				<property name="url" value="jdbc:oracle:thin:@localhost:1521:orcl"/>
+				<property name="username" value="scott"/>
+				<property name="password" value="1111"/>
+			</dataSource>
+		</environment>
+	</environments>
+	<mappers>
+		<mapper resource="Board.xml"/>
+		<mapper resource="Login.xml"/>
+		<mapper resource="On.xml"/>
+		<mapper resource="Do.xml"/>
+	</mappers>
+	
+
+</configuration>

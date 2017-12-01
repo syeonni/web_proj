@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC 	"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="on.mybatis">
+	<cache />
+	<select id="getDepartments" resultType="Department">
+		select * from department
+	</select>
+	
+	<select id="insert_readcount" resultType="int">
+		select count(*) from patient
+	</select>
+	
+	<insert id="insertPatient_insert" parameterType="hashmap">
+		insert into patient (PATIENT_ID, PATIENT_NAME, JUMIN1, 
+		JUMIN, PATIENT_SEX, PATIENT_AGE,
+		PATIENT_ADDRESS,PATIENT_PHONE, PATIENT_BTYPE,
+		PATIENT_UNUSUAL, PATIENT_ITYPE)
+		values(#{pcnt},#{patient.patient_name},#{patient.jumin1},
+		#{patient.jumin},#{patient.patient_sex},#{patient.patient_age},
+		#{patient.patient_address},#{patient.patient_phone},#{patient.patient_btype},
+		#{patient.patient_unusual},#{patient.patient_itype})
+	</insert>
+	
+	<select id="getPatientCount" resultType="int">
+		select nvl(count(*), 0) from patient
+	</select>
+	
+	<select id="getPatients" resultType="patient" parameterType="hashmap">
+		select * from patient where ${conditionV} like '%${value}%'
+	</select>
+	
+	<select id="getPatient" resultType="Patient" parameterType="string">
+		select * from patient where patient_id = #{patient_id}
+	</select>
+	
+	<select id="getPatient_fr" resultType="int" parameterType="string">
+		select nvl(count(*), 0) from receive where patient_id = #{patient_id}
+	</select>
+	
+	<select id="getDepart_name" resultType="string" parameterType="string">
+		select depart_name from department where depart_id = #{depart_id}
+	</select>
+	
+	<select id="insertReceive_readcount" resultType="int">
+		select count(*) from receive
+	</select>
+	
+	<insert id="insertReceive_insert" parameterType="hashmap">
+		insert into receive 
+		values(#{rcnt},#{receive.patient_id},
+		(select user_id from staff where user_name = #{receive.user_id}),
+		sysdate, #{receive.fmyn}, 'N', 'N')
+	</insert>
+	
+	<select id="getReceivesN" resultType="Receive" parameterType="hashmap">
+		select re.receive_id, re.patient_id, re.user_id, re.receive_date, re.fmyn, re.treat_status, re.receipt_yn  from receive re, patient pa 
+where re.patient_id = pa.patient_id and re.receipt_yn = 'N' and pa.patient_id = #{patient_id}
+	</select>
+	
+	<select id="insertReceipt_readcount" resultType="int">
+		select count(*) from receipt
+	</select>
+	
+	<insert id="insertReceipt" parameterType="hashmap">
+		insert into receipt 
+		values(#{rcnt},#{receipt.receive_id},#{receipt.suga_id},
+		#{receipt.detail_name},#{receipt.patients_cost},
+		#{receipt.corporation_cost},#{receipt.all_patientcost},
+		#{receipt.select_pay},#{receipt.receiptyn},sysdate)
+	</insert>
+	
+	<update id="update_receive_receipt" parameterType="hashmap">
+		update receive set receipt_yn='Y' where receive_id = #{receipt.receive_id}
+	</update>
+	
+	<select id="getReceiptList" resultType="Receipt" parameterType="hashmap">
+		select * from receipt pt, receive ve, suga su
+		where pt.receive_id = ve.receive_id and ve.patient_id = #{patient_id}
+		and pt.receiptyn = 'N' and pt.suga_id = su.suga_id
+	</select>
+	
+	<select id="getInjectsListN" resultType="Receipt" parameterType="hashmap">
+		select re.receive_id, pr.INJEC_ID suga_id, '검사료' detail_name,
+(select unit_cost from suga s where s.SUGA_ID = pr.INJEC_ID) patients_cost,
+0 corporation_cost ,0 all_patientcost,'N' select_pay,'N' receiptyn, sysdate receipt_date, pr.prescription_id prescription_id
+from prescription pr, suga su, receive re
+where pr.receipt_yn = 'N' and pr.prescription_type = 'injection' 
+and pr.injec_id = su.suga_id and re.receive_id = pr.receive_id and re.patient_id = #{patient_id}
+		
+	</select>
+	
+	
+	<insert id="insertReceipt2" parameterType="hashmap">
+		insert into receipt 
+		values(#{rcnt},#{receipt.receive_id},#{receipt.suga_id},
+		#{receipt.detail_name},#{receipt.patients_cost},
+		#{receipt.corporation_cost},#{receipt.all_patientcost},
+		#{receipt.select_pay},#{receipt.receiptyn},sysdate)
+	</insert>
+	
+	<update id="update_prescription_receipt" parameterType="hashmap">
+		update PRESCRIPTION set RECEIPT_YN='M' where PRESCRIPTION_ID = #{receipt.prescription_id}
+	</update>
+	
+	<update id="updateReceiptY_rec" parameterType="hashmap">
+		update receipt set RECEIPTYN = 'Y' where RECEIPT_ID = ${receipt_id}
+	</update>
+	
+	<update id="updateReceiptY_pre" parameterType="hashmap">
+		update prescription set receipt_yn = 'Y' 
+		where prescription_id in 
+		(select prescription_id from prescription 
+		where receive_id = (select receive_id from receipt where receipt_id = ${receipt_id}))
+	</update>
+	
+</mapper>
